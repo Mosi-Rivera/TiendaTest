@@ -49,28 +49,54 @@ router.post('/add', passport.authenticate('jwt', {session: false}), async (req, 
     }
 });
 
+const getChangedItems = (cart, response_arr) => {
+    const product_obj = {};
+    for (const product of cart)
+        product_obj[product._id] = product;
+    for (const product in response_arr)
+    {
+        if (product)
+            delete product_obj[product._id];
+    }
+    return (product_obj);
+};
+
 router.post('/checkout', passport.authenticate('jwt', {session: false}), async (req, res) => {
+    const address_index = req.body.address_index;
     const user_id = req.user._id;
-    const user = await User.findById(user_id);
-    if (user.cart.length == 0)
-        res.status(500).json({message: "Cart is empty."});
+    const user = await User.findById(user_id).populate('cart.product', '_id name color brand price');
+    if (!address_index || !user || !user.delivery_addresses[address_index] || user.cart.length == 0)
+        return res.status(500).json({message: "Something went wrong. Try again later."});
     const session = await mongoose.startSession();
     session.startTransaction();
     try
     {
-        const bulk_write_ops = user.cart.map((item, i) => ({
-            updateOne: {
-                filter: {_id: item._id },
-                update: { $inc: { ['quantities.' + item.size]: -item.quantity } },
-                runValidators: true
-            }
-        }));
-        await Product.bulkWrite(bulk_write_ops);
+        const response_arr = await Promise.all(user.cart.map(({product, size, quantity}, i) => Product.findOneAndUpdate(
+            {_id: product._id, ['quantities.' + size]: { $gte: quantity} },
+            { $inc: { ['quantities.' + size]: -quantity } },
+            { runValidators: true, new: true }
+        )));
+        if (response_arr.indexOf(null) !== -1)
+            return res.status(500).json({message: "Something went wrong"});
         await User.findByIdAndUpdate(user_id, {$set: {cart: []}});
-        const new_order = new Order({});
-        new_order.save();
+        const new_order = new Order({
+            user_id: user._id,
+            email: user.email,
+            delivery_info: user.delivery_addresses[address_index],
+            products: user.cart.map(({product, size, quantity}) => ({
+                product_id: product._id,
+                name: product.name,
+                color: product.color,
+                brand: product.brand,
+                price: product.price,
+                size,
+                quantity
+            })),
+            total_cost: user.cart.reduce((price, {quantity, product}) => price + product.price * quantity, 0)
+        });
+        const order = await new_order.save();
         session.commitTransaction();
-        res.status.json({ order });
+        res.status(200).json({ order });
     }
     catch(err)
     {

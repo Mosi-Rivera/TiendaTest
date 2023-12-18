@@ -4,6 +4,8 @@ const productRoutes = require('./routes/productRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const cartRoutes = require('./routes/cartRoutes');
+const changelogRoutes = require('./routes/ChangeLogRoutes');
+const orderRoutes = require('./routes/OrderRoutes');
 const path = require('path');
 const dbConfig = require('./config/db');
 const ExpressMongoSanitize = require('express-mongo-sanitize');
@@ -23,6 +25,8 @@ app.use('/api/user', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/changelogs', changelogRoutes);
 
 app.get('*', (req, res) => {
     res.status(404).send("Route does not exist!");

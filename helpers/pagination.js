@@ -17,6 +17,7 @@ _exports.createBaseUrl = (req, current_route = '') => {
 _exports.createNextUrl = (base_url, query, offset, limit, max_documents) => {
     if (offset + limit < max_documents)
     {
+        query.limit = limit;
         query.offset = offset + limit;
         return base_url + "?" + new URLSearchParams(query).toString();
     }
@@ -27,6 +28,7 @@ _exports.createNextUrl = (base_url, query, offset, limit, max_documents) => {
 _exports.createPreviousUrl = (base_url, query, offset, limit, max_documents) => {
     if (offset > 0)
     {
+        query.limit = limit;
         query.offset = Math.max(offset - limit, 0);
         return base_url + "?" + new URLSearchParams(query).toString();
     }
