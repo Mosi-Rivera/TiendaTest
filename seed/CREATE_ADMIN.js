@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const roles = require('../config/roles');
-const document_types = require('../config/document_types');
 const { validatePassword } = require('../helpers/input_validation');
 require('dotenv').config();
 

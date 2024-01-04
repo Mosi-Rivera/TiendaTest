@@ -236,7 +236,7 @@ router.get('/popular', async (req, res) => {
     limit = parseLimit(limit, 5);
     try
     {
-        const result = await Product.find().sort('-bought_count').limit(limit).select('_id image_url name price bought_count');
+        const result = await Product.find().sort('-bought_count').limit(limit).select('_id brand image_url name price bought_count');
         res.status(200).json({
             products: result
         });

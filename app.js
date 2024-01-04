@@ -7,11 +7,13 @@ const cartRoutes = require('./routes/cartRoutes');
 const changelogRoutes = require('./routes/ChangeLogRoutes');
 const orderRoutes = require('./routes/OrderRoutes');
 const path = require('path');
+const cors = require('cors');
 const dbConfig = require('./config/db');
 const ExpressMongoSanitize = require('express-mongo-sanitize');
 require('dotenv').config();
 const app = express();
 
+app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
